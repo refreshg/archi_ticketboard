@@ -208,6 +208,12 @@ export function aggregate(deals, { enums, userById, pmByProjectName }) {
   };
 }
 
+/** Portal origin, derived from the webhook so both stay in step. */
+export const PORTAL_ORIGIN = new URL(WEBHOOKS.deal).origin;
+
+/** Link to a deal's card in Bitrix. */
+export const dealUrl = (id) => `${PORTAL_ORIGIN}/crm/deal/details/${id}/`;
+
 /** Flatten a deal into the columns shown in the slide-over detail table. */
 export function dealRow(deal, { enums, userById, pmByProjectName }) {
   const projects = projectNames(deal, enums);
@@ -219,6 +225,8 @@ export function dealRow(deal, { enums, userById, pmByProjectName }) {
 
   return {
     id: deal.ID,
+    url: dealUrl(deal.ID),
+    title: deal.TITLE || `#${deal.ID}`,
     project: projects.join(', ') || '—',
     direction: enums[FIELD.DIRECTION]?.get(String(deal[FIELD.DIRECTION])) || '—',
     problemGroup: enums[FIELD.PROBLEM_GROUP]?.get(String(deal[FIELD.PROBLEM_GROUP])) || '—',
@@ -232,6 +240,7 @@ export function dealRow(deal, { enums, userById, pmByProjectName }) {
 }
 
 export const DETAIL_COLUMNS = [
+  ['id', 'ID'],
   ['project', 'პროექტი'],
   ['direction', 'მიმართულება'],
   ['problemGroup', 'პრობლემის ჯგუფი'],

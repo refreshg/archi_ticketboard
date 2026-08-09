@@ -314,7 +314,25 @@ body { background: #f9f9f7; }
 .drawer-body { flex: 1; overflow: hidden; display: flex; flex-direction: column; }
 .drawer-body .table-wrap { max-height: none; flex: 1; }
 .grid.detail td { white-space: nowrap; max-width: 260px; overflow: hidden; text-overflow: ellipsis; }
-.grid.detail td.wrap { white-space: normal; }
+.grid.detail td.wrap { white-space: normal; min-width: 120px; }
+/* Slightly tighter cells so the extra ID column still leaves room for the
+   deadline at the right edge on a typical screen. */
+.grid.detail th, .grid.detail td { padding-left: 9px; padding-right: 9px; }
+.grid.detail td:last-child, .grid.detail th:last-child { white-space: nowrap; }
+
+/* Whole row opens the deal in Bitrix; the ID cell is the visible affordance. */
+.grid.detail tr.deal-row { cursor: pointer; }
+.grid.detail tr.deal-row:hover { background: var(--page); }
+.grid.detail tr.deal-row:focus-visible {
+  outline: 2px solid var(--series-1); outline-offset: -2px;
+}
+.grid.detail td.id-cell { font-variant-numeric: tabular-nums; }
+.deal-link {
+  color: var(--series-1); text-decoration: none; font-weight: 600;
+  white-space: nowrap; border-radius: 4px;
+}
+.deal-link:hover { text-decoration: underline; }
+.deal-link:focus-visible { outline: 2px solid var(--series-1); outline-offset: 2px; }
 
 /* ---------- tooltip ---------- */
 .tooltip {

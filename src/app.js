@@ -306,13 +306,26 @@ function openDrawer(deals, title) {
 
   const tbody = table.querySelector('tbody');
   tbody.innerHTML = rows.length
-    ? rows.map((r) => `<tr>${DETAIL_COLUMNS
-        .map(([key]) => `<td class="${key === 'project' ? 'wrap' : ''}" title="${escapeAttr(r[key])}">${escapeHtml(r[key])}</td>`)
-        .join('')}</tr>`).join('')
+    ? rows.map((r) => {
+        const cells = DETAIL_COLUMNS.map(([key]) => {
+          if (key === 'id') {
+            // The ID is the explicit affordance; the row click is the shortcut.
+            return `<td class="id-cell"><a class="deal-link" href="${escapeAttr(r.url)}"` +
+              ` target="_blank" rel="noopener noreferrer"` +
+              ` title="${escapeAttr(r.title)}">${escapeHtml(r.id)} ↗</a></td>`;
+          }
+          return `<td class="${key === 'project' ? 'wrap' : ''}"` +
+            ` title="${escapeAttr(r[key])}">${escapeHtml(r[key])}</td>`;
+        }).join('');
+        return `<tr class="deal-row" data-url="${escapeAttr(r.url)}"` +
+          ` tabindex="0" role="link" title="${escapeAttr(r.title)}">${cells}</tr>`;
+      }).join('')
     : `<tr><td colspan="${DETAIL_COLUMNS.length}" style="color:var(--muted)">ჩანაწერი არ მოიძებნა</td></tr>`;
 
   $('drawer-title').textContent = title;
-  $('drawer-sub').textContent = `${rows.length} თიქეთი`;
+  $('drawer-sub').textContent = rows.length
+    ? `${rows.length} თიქეთი · დაკლიკე სტრიქონზე ბიტრიქსში გასახსნელად`
+    : '0 თიქეთი';
   $('drawer').dataset.rows = JSON.stringify(rows);
 
   lastFocus = document.activeElement;
@@ -404,6 +417,30 @@ function wire() {
     card.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); }
     });
+  });
+
+  // Open a deal in Bitrix from anywhere on its row. Delegated, so it keeps
+  // working after the drawer re-renders. Clicks on the ID anchor fall through
+  // to the anchor's own navigation.
+  const openDeal = (url, viaMiddle) => {
+    if (!url) return;
+    window.open(url, viaMiddle ? '_blank' : '_blank', 'noopener,noreferrer');
+  };
+  const detail = $('tbl-detail');
+  detail.addEventListener('click', (e) => {
+    if (e.target.closest('a')) return;
+    const row = e.target.closest('.deal-row');
+    if (row) openDeal(row.dataset.url);
+  });
+  detail.addEventListener('auxclick', (e) => {
+    if (e.button !== 1 || e.target.closest('a')) return;
+    const row = e.target.closest('.deal-row');
+    if (row) { e.preventDefault(); openDeal(row.dataset.url, true); }
+  });
+  detail.addEventListener('keydown', (e) => {
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    const row = e.target.closest?.('.deal-row');
+    if (row && e.target === row) { e.preventDefault(); openDeal(row.dataset.url); }
   });
 
   $('drawer-close').addEventListener('click', closeDrawer);
