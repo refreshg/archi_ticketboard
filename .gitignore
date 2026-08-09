@@ -1,0 +1,6 @@
+node_modules/
+package-lock.json
+shot-*.png
+*.log
+.DS_Store
+.claude/

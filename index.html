@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="ka">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Archi — თიქეთების ბორდი</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><text y='14' font-size='14'>📊</text></svg>">
+<link rel="stylesheet" href="src/styles.css">
+</head>
+<body>
+<div class="app viz-root">
+
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true"></span>
+      <div>
+        <h1>თიქეთების ბორდი</h1>
+        <p class="brand-sub">Bitrix24 · Pipeline 23</p>
+      </div>
+    </div>
+
+    <div class="filters" role="group" aria-label="თარიღის ფილტრი">
+      <div class="preset-row" id="presets">
+        <button class="preset" data-months="1">1 თვე</button>
+        <button class="preset" data-months="3">3 თვე</button>
+        <button class="preset" data-months="6">6 თვე</button>
+        <button class="preset" data-months="12">1 წელი</button>
+      </div>
+      <div class="date-row">
+        <label>დან <input type="date" id="from"></label>
+        <label>მდე <input type="date" id="to"></label>
+        <button id="apply" class="btn-primary">ჩატვირთვა</button>
+        <button id="refresh" class="btn-ghost" title="განახლება">↻</button>
+      </div>
+    </div>
+  </header>
+
+  <div id="status" class="status" role="status" aria-live="polite"></div>
+
+  <main id="main" hidden>
+
+    <!-- KPI row -->
+    <section class="kpis" aria-label="ჯამური მაჩვენებლები">
+      <article class="kpi" data-scope="all" data-metric="total" tabindex="0" role="button">
+        <span class="kpi-label">სულ თიქეთები</span>
+        <strong class="kpi-value" id="kpi-total">—</strong>
+        <span class="kpi-foot" id="kpi-total-foot"></span>
+      </article>
+      <article class="kpi accent-overdue" data-scope="all" data-metric="overdue" tabindex="0" role="button">
+        <span class="kpi-label">ვადაგადაცილებული</span>
+        <strong class="kpi-value" id="kpi-overdue">—</strong>
+        <span class="kpi-foot" id="kpi-overdue-foot"></span>
+      </article>
+      <article class="kpi accent-closed" data-scope="all" data-metric="closed" tabindex="0" role="button">
+        <span class="kpi-label">ჩახურული თიქეთები</span>
+        <strong class="kpi-value" id="kpi-closed">—</strong>
+        <span class="kpi-foot" id="kpi-closed-foot"></span>
+      </article>
+      <article class="kpi accent-odclosed" data-scope="all" data-metric="overdueClosed" tabindex="0" role="button">
+        <span class="kpi-label">ვადაგ. ჩახურული</span>
+        <strong class="kpi-value" id="kpi-odclosed">—</strong>
+        <span class="kpi-foot" id="kpi-odclosed-foot"></span>
+      </article>
+    </section>
+
+    <!-- Charts -->
+    <section class="charts">
+      <figure class="card chart-card">
+        <figcaption>
+          <h2>ტოპ პროექტები</h2>
+          <p>თიქეთების რაოდენობა ეტაპების მიხედვით</p>
+        </figcaption>
+        <div id="chart-projects" class="chart"></div>
+        <div class="legend" id="legend-projects"></div>
+      </figure>
+
+      <figure class="card chart-card">
+        <figcaption>
+          <h2>ეტაპების განაწილება</h2>
+          <p>ყველა თიქეთი მიმდინარე პერიოდში</p>
+        </figcaption>
+        <div id="chart-stages" class="chart"></div>
+      </figure>
+
+      <figure class="card chart-card wide">
+        <figcaption>
+          <h2>დინამიკა</h2>
+          <p>შექმნილი თიქეთები კვირების მიხედვით</p>
+        </figcaption>
+        <div id="chart-trend" class="chart"></div>
+      </figure>
+    </section>
+
+    <!-- Tables -->
+    <section class="tables">
+      <div class="card table-card">
+        <div class="table-head">
+          <h2>პროექტები</h2>
+          <input type="search" id="q-project" class="search" placeholder="ძებნა…" aria-label="პროექტის ძებნა">
+        </div>
+        <div class="table-wrap">
+          <table class="grid" id="tbl-projects">
+            <thead>
+              <tr>
+                <th class="th-name">პროექტი</th>
+                <th class="num sortable" data-sort="total">თიქეთების რაოდ.</th>
+                <th class="num sortable" data-sort="overdue">ვადაგადაცილებული თიქ. რაოდ.</th>
+                <th class="num sortable" data-sort="closed">ჩახურული თიქეთები</th>
+                <th class="num sortable" data-sort="overdueClosed">ვადაგ. ჩახურული თიქეთები</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+            <tfoot></tfoot>
+          </table>
+        </div>
+      </div>
+
+      <div class="card table-card">
+        <div class="table-head">
+          <h2>პორტფოლიო მენეჯერები</h2>
+          <input type="search" id="q-manager" class="search" placeholder="ძებნა…" aria-label="მენეჯერის ძებნა">
+        </div>
+        <div class="table-wrap">
+          <table class="grid" id="tbl-managers">
+            <thead>
+              <tr>
+                <th class="th-name">პორტფოლიო მენეჯერი</th>
+                <th class="num sortable" data-sort="total">თიქეთების რაოდ.</th>
+                <th class="num sortable" data-sort="overdue">ვადაგად. თიქ. რაოდ.</th>
+                <th class="num sortable" data-sort="closed">ჩახურული თიქეთები</th>
+                <th class="num sortable" data-sort="overdueClosed">ვადაგ. ჩახურული თიქეთები</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+            <tfoot></tfoot>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <p class="note">რაოდენობებზე დაკლიკვით იხსნება თიქეთების ჩამონათვალი.</p>
+  </main>
+</div>
+
+<!-- Slide-over detail panel -->
+<div class="drawer-scrim" id="scrim" hidden></div>
+<aside class="drawer" id="drawer" hidden aria-labelledby="drawer-title" role="dialog" aria-modal="true">
+  <header class="drawer-head">
+    <div>
+      <h2 id="drawer-title">დილების ჩამონათვალი</h2>
+      <p id="drawer-sub" class="drawer-sub"></p>
+    </div>
+    <div class="drawer-actions">
+      <button id="drawer-csv" class="btn-ghost" title="CSV ექსპორტი">⭳ CSV</button>
+      <button id="drawer-close" class="btn-close" aria-label="დახურვა">✕</button>
+    </div>
+  </header>
+  <div class="drawer-body">
+    <div class="table-wrap">
+      <table class="grid detail" id="tbl-detail">
+        <thead></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+</aside>
+
+<div id="tooltip" class="tooltip" hidden></div>
+
+<script type="module" src="src/app.js"></script>
+</body>
+</html>

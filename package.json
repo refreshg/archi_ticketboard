@@ -1,0 +1,14 @@
+{
+  "name": "archi-ticketboard",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Bitrix24 pipeline-23 ticket LiveBoard",
+  "type": "module",
+  "scripts": {
+    "start": "node serve.mjs",
+    "verify": "node src/verify.mjs"
+  },
+  "devDependencies": {
+    "playwright": "^1.62.1"
+  }
+}
