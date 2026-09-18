@@ -126,7 +126,7 @@ body { background: #f9f9f7; }
 }
 .date-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 .date-row label { display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--muted); }
-.date-row input {
+.date-row input, .date-row select {
   font: inherit; font-size: 13px; padding: 5px 8px; border-radius: 8px;
   border: 1px solid var(--border); background: var(--surface-1); color: var(--text-primary);
 }

@@ -40,11 +40,17 @@ Paging needs `order[ID]=ASC` for a stable window.
 | ჩახურული | `C23:WON` **+** `C23:PREPAYMENT_INVOIC` |
 | ვადაგ. ჩახურული | ჩახურული **and** `UF_CRM_1731998758508 = True` |
 
-The date filter runs on **`DATE_CREATE`**, not `CLOSEDATE` — the user chose this
-explicitly. "Last month" therefore means tickets *created* in that window, which
-is why the overdue-closed count is small (3 for a typical month): older tickets
-that closed late fall outside the window. Switching to `CLOSEDATE` is a one-line
-change in `buildFilter` if the question ever becomes "what closed this month".
+The date filter runs on **`BEGINDATE`** by default — the field the CRM list
+filter labels "თარიღიდან", which is what the ticket team (Ana Gogatishvili)
+filters by when checking the board against the CRM. A `#datefield` selector
+switches to `DATE_CREATE`; `DATE_FIELDS` in `src/model.js` is the option list.
+
+The board originally filtered on `DATE_CREATE`, and the client reported every
+number as wrong (2026-09-15). On this pipeline `BEGINDATE` sits 11–30 days after
+`DATE_CREATE` on nearly every ticket, so the two windows select very different
+deals: 15.08–15.09.2026 gave 416 by `BEGINDATE` (CRM showed 418) vs 309 by
+`DATE_CREATE`, with a completely different stage mix. **When someone says the
+board disagrees with the CRM, first ask which date field their CRM filter uses.**
 
 ## Field map
 

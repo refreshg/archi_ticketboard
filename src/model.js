@@ -41,7 +41,7 @@ export const FIELD = {
 
 /** Fields requested from crm.deal.list — UF_ fields are omitted unless selected. */
 export const DEAL_SELECT = [
-  'ID', 'TITLE', 'STAGE_ID', 'ASSIGNED_BY_ID', 'DATE_CREATE', 'CLOSEDATE',
+  'ID', 'TITLE', 'STAGE_ID', 'ASSIGNED_BY_ID', 'DATE_CREATE', 'BEGINDATE', 'CLOSEDATE',
   FIELD.PROJECT, FIELD.OVERDUE_CLOSED, FIELD.DIRECTION,
   FIELD.PROBLEM_GROUP, FIELD.CO_ASSIGNED, FIELD.RESOLVER,
 ];
@@ -72,22 +72,39 @@ export function formatDate(value) {
   return `${pad(d.getDate())}.${pad(d.getMonth() + 1)}.${d.getFullYear()}`;
 }
 
+// Local calendar date, not toISOString — that is UTC, so between 00:00 and
+// 04:00 Tbilisi time it returned yesterday and shifted the whole window.
+export const localISO = (d) =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+
 export function monthsAgoISO(months) {
   const d = new Date();
   d.setMonth(d.getMonth() - months);
-  return d.toISOString().slice(0, 10);
+  return localISO(d);
 }
 
 export function todayISO() {
-  return new Date().toISOString().slice(0, 10);
+  return localISO(new Date());
 }
 
-/** Build the crm.deal.list filter for a date window on DATE_CREATE. */
-export function buildFilter({ from, to }) {
+/**
+ * Deal fields the date window can run on. BEGINDATE is what the CRM list
+ * filter labels "თარიღიდან" — the field the ticket team filters by, so it is
+ * the default; it sits 11–30 days after DATE_CREATE on nearly every ticket, so
+ * the two windows select very different deal sets.
+ */
+export const DATE_FIELDS = {
+  BEGINDATE: 'თარიღიდან',
+  DATE_CREATE: 'შექმნის თარიღი',
+};
+export const DEFAULT_DATE_FIELD = 'BEGINDATE';
+
+/** Build the crm.deal.list filter for a date window on the chosen date field. */
+export function buildFilter({ from, to, field = DEFAULT_DATE_FIELD }) {
   const filter = { CATEGORY_ID: PIPELINE };
-  if (from) filter['>=DATE_CREATE'] = from;
-  // DATE_CREATE is a datetime; extend the upper bound to the end of that day.
-  if (to) filter['<=DATE_CREATE'] = `${to}T23:59:59`;
+  if (from) filter[`>=${field}`] = from;
+  // The field is a datetime; extend the upper bound to the end of that day.
+  if (to) filter[`<=${field}`] = `${to}T23:59:59`;
   return filter;
 }
 

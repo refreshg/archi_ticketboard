@@ -10,6 +10,7 @@ import {
   STAGE, STAGE_LABEL, CLOSED_STAGES, FIELD, DEAL_SELECT, DETAIL_COLUMNS,
   buildFilter, loadReference, aggregate, dealRow, projectNames,
   isOverdue, isClosed, isOverdueClosed, monthsAgoISO, todayISO, formatDate,
+  DATE_FIELDS, DEFAULT_DATE_FIELD, localISO,
 } from './model.js';
 import { stackedBars, donut, trendLine, renderLegend, hideTip } from './charts.js';
 
@@ -27,6 +28,7 @@ const state = {
   reference: null,
   deals: [],
   agg: null,
+  dateField: DEFAULT_DATE_FIELD,
   sort: { projects: { key: 'total', dir: 'desc' }, managers: { key: 'total', dir: 'desc' } },
   query: { projects: '', managers: '' },
   inflight: null,
@@ -61,7 +63,7 @@ function setStatus(text, { error = false, progress = null } = {}) {
 
 /* ------------------------------- loading ------------------------------ */
 
-async function load({ from, to }) {
+async function load({ from, to, field }) {
   state.inflight?.abort();
   const controller = new AbortController();
   state.inflight = controller;
@@ -80,7 +82,7 @@ async function load({ from, to }) {
     const deals = await fetchAll(
       WEBHOOKS.deal,
       'crm.deal.list',
-      { filter: buildFilter({ from, to }), select: DEAL_SELECT, order: { ID: 'ASC' } },
+      { filter: buildFilter({ from, to, field }), select: DEAL_SELECT, order: { ID: 'ASC' } },
       {
         signal,
         onProgress: (n, t) => {
@@ -94,11 +96,12 @@ async function load({ from, to }) {
 
     if (signal.aborted) return;
     state.deals = deals;
+    state.dateField = field;
     state.agg = aggregate(deals, state.reference);
     render({ from, to });
 
     const ms = Math.round(performance.now() - started);
-    setStatus(`${deals.length} თიქეთი · ${formatDate(from)} – ${formatDate(to)} · ${ms}ms`);
+    setStatus(`${deals.length} თიქეთი · ${DATE_FIELDS[field]}: ${formatDate(from)} – ${formatDate(to)} · ${ms}ms`);
   } catch (err) {
     if (err.name === 'AbortError') return;
     console.error(err);
@@ -118,7 +121,7 @@ function render({ from, to }) {
   $('kpi-odclosed').textContent = num(totals.overdueClosed);
 
   const pct = (n) => (totals.total ? `${((n / totals.total) * 100).toFixed(1).replace('.0', '')}%` : '—');
-  $('kpi-total-foot').textContent = `${formatDate(from)} – ${formatDate(to)}`;
+  $('kpi-total-foot').textContent = `${DATE_FIELDS[state.dateField]}: ${formatDate(from)} – ${formatDate(to)}`;
   $('kpi-overdue-foot').textContent = `${pct(totals.overdue)} სულიდან`;
   $('kpi-closed-foot').textContent = `${pct(totals.closed)} სულიდან`;
   $('kpi-odclosed-foot').textContent = totals.closed
@@ -181,22 +184,23 @@ function renderCharts() {
     ),
   });
 
-  trendLine($('chart-trend'), weeklySeries(state.deals));
+  $('trend-sub').textContent = `თიქეთები კვირების მიხედვით · ${DATE_FIELDS[state.dateField]}`;
+  trendLine($('chart-trend'), weeklySeries(state.deals, state.dateField));
 }
 
-/** Bucket deals into ISO weeks by creation date. */
-function weeklySeries(deals) {
+/** Bucket deals into ISO weeks by the date field the window runs on. */
+function weeklySeries(deals, field) {
   const buckets = new Map();
   for (const d of deals) {
-    if (!d.DATE_CREATE) continue;
-    const date = new Date(d.DATE_CREATE);
+    if (!d[field]) continue;
+    const date = new Date(d[field]);
     if (Number.isNaN(date.getTime())) continue;
     // Snap to the Monday of that week.
     const monday = new Date(date);
     const dow = (monday.getDay() + 6) % 7;
     monday.setDate(monday.getDate() - dow);
     monday.setHours(0, 0, 0, 0);
-    const key = monday.toISOString().slice(0, 10);
+    const key = localISO(monday);
     buckets.set(key, (buckets.get(key) || 0) + 1);
   }
   return Array.from(buckets.entries())
@@ -365,7 +369,7 @@ function exportCsv() {
 /* -------------------------------- events ------------------------------ */
 
 function currentRange() {
-  return { from: $('from').value, to: $('to').value };
+  return { from: $('from').value, to: $('to').value, field: $('datefield').value };
 }
 
 function setPreset(months) {
@@ -377,6 +381,11 @@ function setPreset(months) {
 }
 
 function wire() {
+  for (const [value, label] of Object.entries(DATE_FIELDS)) {
+    $('datefield').add(new Option(label, value, false, value === DEFAULT_DATE_FIELD));
+  }
+  $('datefield').addEventListener('change', () => load(currentRange()));
+
   document.querySelectorAll('.preset').forEach((btn) => {
     btn.addEventListener('click', () => {
       setPreset(Number(btn.dataset.months));

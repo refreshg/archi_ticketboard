@@ -27,6 +27,7 @@
         <button class="preset" data-months="12">1 წელი</button>
       </div>
       <div class="date-row">
+        <label>ველი <select id="datefield" title="თარიღის ველი, რომელზე ფილტრი ვრცელდება"></select></label>
         <label>დან <input type="date" id="from"></label>
         <label>მდე <input type="date" id="to"></label>
         <button id="apply" class="btn-primary">ჩატვირთვა</button>
@@ -85,7 +86,7 @@
       <figure class="card chart-card wide">
         <figcaption>
           <h2>დინამიკა</h2>
-          <p>შექმნილი თიქეთები კვირების მიხედვით</p>
+          <p id="trend-sub">თიქეთები კვირების მიხედვით</p>
         </figcaption>
         <div id="chart-trend" class="chart"></div>
       </figure>
