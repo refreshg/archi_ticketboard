@@ -94,7 +94,7 @@ export function todayISO() {
  * the two windows select very different deal sets.
  */
 export const DATE_FIELDS = {
-  BEGINDATE: 'თარიღიდან',
+  BEGINDATE: 'დედლაინი',
   DATE_CREATE: 'შექმნის თარიღი',
 };
 export const DEFAULT_DATE_FIELD = 'BEGINDATE';

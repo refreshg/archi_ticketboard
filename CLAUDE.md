@@ -41,7 +41,7 @@ Paging needs `order[ID]=ASC` for a stable window.
 | ვადაგ. ჩახურული | ჩახურული **and** `UF_CRM_1731998758508 = True` |
 
 The date filter runs on **`BEGINDATE`** by default — the field the CRM list
-filter labels "თარიღიდან", which is what the ticket team (Ana Gogatishvili)
+filter labels "თარიღიდან" (the board calls it "დედლაინი"), which is what the ticket team (Ana Gogatishvili)
 filters by when checking the board against the CRM. A `#datefield` selector
 switches to `DATE_CREATE`; `DATE_FIELDS` in `src/model.js` is the option list.
 
